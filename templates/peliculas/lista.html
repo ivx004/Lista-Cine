@@ -1,65 +1,99 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi lista de cine</title>
-    <style>
-        :root { font-family: system-ui, sans-serif; color: #202124; background: #f4f1ff; }
-        body { margin: 0; padding: 2rem 1rem; }
-        main { max-width: 760px; margin: auto; }
-        .hero, .card { background: white; border-radius: 18px; padding: 1.5rem; margin-bottom: 1rem; box-shadow: 0 5px 20px #35208018; }
-        h1 { margin: 0 0 .3rem; color: #402080; }
-        .subtitle { margin-top: 0; color: #666; }
-        form.add-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: .75rem; align-items: end; }
-        label { display: block; font-weight: 600; margin-bottom: .35rem; }
-        input { box-sizing: border-box; width: 100%; padding: .75rem; border: 1px solid #ccc; border-radius: 9px; font-size: 1rem; }
-        button { border: 0; border-radius: 9px; padding: .78rem 1rem; font-weight: 700; cursor: pointer; }
-        .primary { background: #5a2ca0; color: white; }
-        .delete { background: #ffe8e8; color: #b42318; }
-        .movie { display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-top: 1px solid #eee; padding: 1rem 0; }
-        .movie:first-of-type { border-top: 0; }
-        .movie h3 { margin: 0 0 .25rem; }
-        .genre { color: #666; }
-        .message { background: #e7f8ed; color: #176b37; padding: .8rem; border-radius: 9px; }
-        .empty { color: #666; text-align: center; padding: 1.5rem; }
-        @media (max-width: 600px) { form.add-form { grid-template-columns: 1fr; } .movie { align-items: flex-start; } }
-    </style>
+    <meta name="description" content="Organiza tus películas favoritas en un solo lugar.">
+    <title>Lista Cine | Mis películas</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body>
-<main>
-    <section class="hero">
-        <h1>🎬 Mi lista de cine</h1>
-        <p class="subtitle">Agrega tus películas favoritas y organiza tu lista.</p>
-    </section>
+    <header class="site-header">
+        <div class="container header-content">
+            <a class="brand" href="{% url 'peliculas:lista' %}">
+                <span class="brand-icon">🎬</span>
+                <span>Lista<span class="brand-accent">Cine</span></span>
+            </a>
+            <a class="admin-link" href="{% url 'admin:index' %}">Panel admin <span>↗</span></a>
+        </div>
+    </header>
 
-    {% if messages %}
-        {% for message in messages %}<div class="message">{{ message }}</div>{% endfor %}
-    {% endif %}
+    <main class="container page-content">
+        <section class="welcome">
+            <div>
+                <p class="eyebrow">MI COLECCIÓN PERSONAL</p>
+                <h1>Tu próxima película<br><span>empieza aquí.</span></h1>
+                <p class="intro">Guarda tus favoritas y ten tu lista de cine siempre organizada.</p>
+            </div>
+            <div class="clapperboard" aria-hidden="true">🎞️</div>
+        </section>
 
-    <section class="card">
-        <h2>Agregar película</h2>
-        <form class="add-form" action="{% url 'peliculas:agregar' %}" method="post">
-            {% csrf_token %}
-            <div><label for="id_titulo">Título</label>{{ form.titulo }}</div>
-            <div><label for="id_genero">Género</label>{{ form.genero }}</div>
-            <button class="primary" type="submit">+ Agregar</button>
-        </form>
-    </section>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="message" role="status"><span>✓</span> {{ message }}</div>
+            {% endfor %}
+        {% endif %}
 
-    <section class="card">
-        <h2>Películas guardadas ({{ peliculas|length }})</h2>
-        {% for pelicula in peliculas %}
-            <article class="movie">
-                <div><h3>{{ pelicula.titulo }}</h3><span class="genre">{{ pelicula.genero }}</span></div>
-                <form action="{% url 'peliculas:eliminar' pelicula.pk %}" method="post">
-                    {% csrf_token %}<button class="delete" type="submit">🗑️ Borrar</button>
-                </form>
-            </article>
-        {% empty %}
-            <p class="empty">Todavía no tienes películas. ¡Agrega la primera!</p>
-        {% endfor %}
-    </section>
-</main>
+        <section class="add-card">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">NUEVO REGISTRO</p>
+                    <h2>Agregar película</h2>
+                </div>
+                <span class="step-badge">01</span>
+            </div>
+            <form class="movie-form" action="{% url 'peliculas:agregar' %}" method="post">
+                {% csrf_token %}
+                <div class="field">
+                    <label for="id_titulo">Título de la película</label>
+                    {{ form.titulo }}
+                    {% if form.titulo.errors %}<small class="error">{{ form.titulo.errors|striptags }}</small>{% endif %}
+                </div>
+                <div class="field">
+                    <label for="id_genero">Género</label>
+                    {{ form.genero }}
+                    {% if form.genero.errors %}<small class="error">{{ form.genero.errors|striptags }}</small>{% endif %}
+                </div>
+                <button class="button button-primary" type="submit"><span>＋</span> Agregar a mi lista</button>
+            </form>
+        </section>
+
+        <section class="list-section">
+            <div class="list-heading">
+                <div>
+                    <p class="eyebrow">MI LISTA</p>
+                    <h2>Películas guardadas</h2>
+                </div>
+                <span class="counter">{{ peliculas|length }} {% if peliculas|length == 1 %}película{% else %}películas{% endif %}</span>
+            </div>
+
+            <div class="movie-list">
+                {% for pelicula in peliculas %}
+                    <article class="movie-item">
+                        <div class="movie-poster" aria-hidden="true">🍿</div>
+                        <div class="movie-info">
+                            <h3>{{ pelicula.titulo }}</h3>
+                            <p><span class="genre-dot"></span>{{ pelicula.genero }} <span class="separator">•</span> Agregada recientemente</p>
+                        </div>
+                        <form action="{% url 'peliculas:eliminar' pelicula.pk %}" method="post" onsubmit="return confirm('¿Quieres borrar esta película?');">
+                            {% csrf_token %}
+                            <button class="delete-button" type="submit" aria-label="Borrar {{ pelicula.titulo }}">Borrar <span>×</span></button>
+                        </form>
+                    </article>
+                {% empty %}
+                    <div class="empty-state">
+                        <div class="empty-icon">🎥</div>
+                        <h3>Tu lista está vacía</h3>
+                        <p>Agrega tu primera película usando el formulario de arriba.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <p>Hecho para disfrutar el cine, una película a la vez.</p>
+    </footer>
 </body>
 </html>
